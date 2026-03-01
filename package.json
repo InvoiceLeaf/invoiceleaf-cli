@@ -1,0 +1,43 @@
+{
+  "name": "@invoiceleaf/cli",
+  "version": "0.1.0",
+  "description": "Command-line interface for InvoiceLeaf",
+  "type": "module",
+  "bin": {
+    "invoiceleaf": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "invoiceleaf",
+    "cli",
+    "invoices"
+  ],
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@invoiceleaf/typescript-sdk": "file:../sdk/typescript-sdk",
+    "chalk": "^5.6.2",
+    "cli-table3": "^0.6.5",
+    "commander": "^14.0.1",
+    "conf": "^14.0.0",
+    "ora": "^9.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "tsup": "^8.5.0",
+    "typescript": "^5.9.2"
+  }
+}
