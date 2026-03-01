@@ -1,7 +1,7 @@
 {
   "name": "@invoiceleaf/cli",
   "version": "0.1.0",
-  "description": "Command-line interface for InvoiceLeaf",
+  "description": "Official command-line interface for InvoiceLeaf",
   "type": "module",
   "bin": {
     "invoiceleaf": "./dist/index.js"
@@ -21,7 +21,13 @@
   "keywords": [
     "invoiceleaf",
     "cli",
-    "invoices"
+    "command-line",
+    "terminal",
+    "typescript",
+    "invoicing",
+    "accounting",
+    "finance",
+    "automation"
   ],
   "license": "Apache-2.0",
   "engines": {
