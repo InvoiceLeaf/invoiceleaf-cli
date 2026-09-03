@@ -7,6 +7,7 @@ import { registerDocumentsCommands } from './documents';
 import { registerOrganizationsCommands } from './organizations';
 import { registerCategoriesCommands } from './categories';
 import { registerTagsCommands } from './tags';
+import { registerIntegrationsCommands } from './integrations';
 
 export function registerCommands(program: Command): void {
   registerAuthCommands(program);
@@ -17,4 +18,5 @@ export function registerCommands(program: Command): void {
   registerOrganizationsCommands(program);
   registerCategoriesCommands(program);
   registerTagsCommands(program);
+  registerIntegrationsCommands(program);
 }

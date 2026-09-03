@@ -63,6 +63,66 @@ You can authenticate using any of:
 - `invoiceleaf organizations ...`: list organizations
 - `invoiceleaf categories list`: list categories for a space
 - `invoiceleaf tags list`: list tags for a space
+- `invoiceleaf integrations ...`: manage integration marketplace entries
+
+## Integrations
+
+Register and maintain the plugin packages the platform serves. These are the
+author-facing endpoints: any authenticated user can create integrations, and
+update, delete or submit their own. Admin-only review actions (approve, reject,
+disable) are not exposed here. Every command works with an API key, so it is
+usable from scripts and CI:
+
+```bash
+invoiceleaf integrations list
+invoiceleaf integrations get integration-stripe
+invoiceleaf integrations get integration-stripe --manifest
+```
+
+`sync` reads a package directory's `manifest.json` and `package.json` and
+creates the registry entry, or updates it when the manifest `id` already exists.
+It is the way to point the platform at a newly published npm version:
+
+```bash
+# Preview across every package
+invoiceleaf integrations sync integrations/*/ --dry-run
+
+# Register or update one package
+invoiceleaf integrations sync integrations/integration-stripe
+
+# Sync, then re-fetch the manifest from the published npm package
+invoiceleaf integrations sync integrations/integration-stripe --refresh
+```
+
+**Publish to npm before syncing.** The server fetches `manifest.json` from the
+npm tarball on create, and again on update whenever the package version changes.
+Registering a version that is not on npm fails with a manifest-fetch error. See
+`.github/workflows/publish-integrations.yml` for publishing.
+
+The npm package is the source of truth for the manifest, so `sync` sends only
+`slug`, `name`, `description`, `packageSource`, `packageVersion` and the
+resource limits. It deliberately does not send the local `manifest.json`,
+`iconUrl`, `dataAccess` or `externalAuthConfig`: the server derives those from
+the published package, and sending local copies would let an edited working tree
+diverge the registry from the package the plugin runtime actually loads.
+
+`sync` refuses to run when a package's `manifest.json` version and
+`package.json` version disagree. Nothing else enforces that parity, and the
+registry resolves packages by npm version, so a mismatch would leave the
+platform serving a package whose manifest claims a different version.
+
+**Ownership.** Integrations belong to the user who created them, so sync must
+run with an API key for the account that authored them. Updating an integration
+owned by someone else returns a permission error, and creating one whose slug is
+taken returns a conflict. Newly created integrations are private and start in
+`DRAFT`; use `submit-review` to put one in front of an admin for public
+marketplace listing.
+
+```bash
+invoiceleaf integrations refresh <id>          # re-fetch manifest from npm
+invoiceleaf integrations submit-review <id>    # submit for marketplace review
+invoiceleaf integrations delete <id>
+```
 
 ## Output Modes
 

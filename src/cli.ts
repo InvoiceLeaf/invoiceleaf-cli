@@ -8,7 +8,7 @@ export function createProgram(): Command {
   program
     .name('invoiceleaf')
     .description('InvoiceLeaf CLI')
-    .version('0.1.0', '-v, --version', 'Display version number')
+    .version('0.2.0', '-v, --version', 'Display version number')
     .option('--json', 'Output JSON')
     .option('--no-color', 'Disable colors')
     .option('--api-key <key>', 'API key for authentication')
