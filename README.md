@@ -10,7 +10,10 @@ Official command-line interface for InvoiceLeaf.
 ## Features
 
 - Authenticate with API key or bearer token
-- List and inspect spaces, organizations, documents, categories, and tags
+- Search, upload, download and delete documents
+- List and inspect spaces, organizations, companies, payments, categories and tags
+- List bank connections, accounts and transactions, and reconcile transactions with documents and payments
+- Create and download exports, show statistics, inspect tax obligations and filing runs
 - Human-friendly table output and JSON output mode
 - Local configuration and session management
 
@@ -55,15 +58,166 @@ You can authenticate using any of:
 
 ## Commands
 
-- `invoiceleaf auth ...`: manage credentials and check auth status
-- `invoiceleaf config ...`: show/set CLI config
-- `invoiceleaf profile show`: show current user profile
-- `invoiceleaf spaces ...`: list/show spaces
-- `invoiceleaf documents ...`: list/show documents
-- `invoiceleaf organizations ...`: list organizations
-- `invoiceleaf categories list`: list categories for a space
-- `invoiceleaf tags list`: list tags for a space
-- `invoiceleaf integrations ...`: manage integration marketplace entries
+Global options work on every command: `--json`, `--no-color`, `--api-key <key>`,
+`--token <token>`, `--api-url <url>`, `-q, --quiet`, `--verbose`.
+
+Space-scoped commands take `-s, --space <id>`. If it is omitted, the CLI uses
+the `defaultSpaceId` config value. If neither is set, the command exits with
+code 2.
+
+### Auth, config and profile
+
+```bash
+invoiceleaf auth apikey --set <key>      # also: --show, --clear
+invoiceleaf auth token --set <token>     # also: --show, --clear
+invoiceleaf auth status
+invoiceleaf auth logout
+invoiceleaf config show
+invoiceleaf config set <key> <value>     # apiUrl, colors, paginationLimit, defaultSpaceId
+invoiceleaf profile show
+```
+
+### Spaces and organizations
+
+```bash
+invoiceleaf spaces list [--limit <n>] [--page <n>]
+invoiceleaf spaces show <id>
+invoiceleaf organizations list [--limit <n>] [--page <n>]
+```
+
+### Documents
+
+```bash
+invoiceleaf documents list [--limit <n>] [--page <n>]
+invoiceleaf documents search [filters]
+invoiceleaf documents show <id>
+invoiceleaf documents upload <file...> [--category <id>] [--tag <id...>]
+invoiceleaf documents download <id> [-o <path>]
+invoiceleaf documents delete <id>
+```
+
+`documents search` filters:
+
+- `--search <query>`
+- `--from <date>` and `--to <date>` (YYYY-MM-DD, both are needed for the range to apply)
+- `--category <id...>`, `--tag <id...>`
+- `--currency <code>`
+- `--payment-status <status...>`: UNPAID, PARTIAL, PAID
+- `--document-status <status...>`: DRAFT, ISSUED, SENT, CANCELLED, DISPUTED
+- `--accounting-type <type...>`: PAYABLE, RECEIVABLE, UNKNOWN
+- `--sort <field>`, `--order <asc|desc>`, `--limit <n>`, `--page <n>`
+
+`documents upload` sends one file to the upload endpoint and several files to
+the bulk upload endpoint. The files are queued for processing. Put the files
+before `--tag`, because `--tag` takes every value that follows it:
+
+```bash
+invoiceleaf documents upload invoice-1.pdf invoice-2.pdf --tag <tagId>
+```
+
+`documents download` saves the original file. Without `-o` it uses the file
+name stored on the document and writes to the current directory.
+
+### Companies and payments
+
+```bash
+invoiceleaf companies list [--search <query>] [--limit <n>] [--page <n>]
+invoiceleaf companies show <id>
+invoiceleaf payments list [filters]
+invoiceleaf payments show <id>
+```
+
+`payments` are the accounting payments of a space. `payments list` filters:
+`--search <query>`, `--company <id>`, `--from <date>`, `--to <date>`,
+`--status <status...>` (UNMATCHED, MATCHED, POSTED), `--currency <code>`,
+`--limit <n>`, `--page <n>`.
+
+### Bank
+
+```bash
+invoiceleaf bank connections list
+invoiceleaf bank connections get <id>
+invoiceleaf bank connections sync <id>
+invoiceleaf bank connections disconnect <id> [-y, --yes]
+invoiceleaf bank accounts list [--connection <id>]
+invoiceleaf bank accounts get <id>
+invoiceleaf bank accounts update <id> [--sync-enabled <true|false>] [--payment-method <id>]
+invoiceleaf bank transactions list [filters]
+invoiceleaf bank transactions get <id>
+invoiceleaf bank transactions link-document <id> <documentId>
+invoiceleaf bank transactions link-company <id> <companyId>
+invoiceleaf bank transactions unlink <id>
+invoiceleaf bank transactions ignore <id>
+invoiceleaf bank transactions create-payment <id> [--company <id>] [--payment-method <id>] \
+  [--document <id>] [--notes <text>]
+invoiceleaf bank transactions update <id> [--notes <text>] [--status <status>]
+```
+
+`get` is also available as `show`. `bank transactions list` filters:
+`--account <id>`, `--search <query>`, `--status <status>` (PENDING, POSTED,
+MATCHED, IGNORED), `--from <date>`, `--to <date>` (YYYY-MM-DD), `--sort <field>`,
+`--order <asc|desc>`, `--limit <n>`, `--page <n>`.
+
+Transaction amounts follow the bank feed sign convention: a positive amount is
+money leaving the account, a negative amount is money coming in.
+
+`connections disconnect` asks for confirmation. Pass `--yes` to skip the
+prompt; without a terminal or with `--json` the flag is required. Imported
+transactions are kept. Connecting a new bank needs a browser, so do that in the
+web app.
+
+`link-company` only categorizes the transaction and leaves its status as it
+is. `unlink` fails while a payment is linked to the transaction: delete the
+payment first. `create-payment` creates an accounting payment from the
+transaction and marks it as matched; with `--document` the payment is
+allocated to that document.
+
+### Categories and tags
+
+```bash
+invoiceleaf categories list
+invoiceleaf tags list
+```
+
+### Exports
+
+```bash
+invoiceleaf exports list [--limit <n>] [--page <n>]
+invoiceleaf exports create [--format <xls|csv|zip|pdf>] [--from <date>] [--to <date>] \
+  [--filename <name>] [--currency <code>] [--category <id...>] [--tag <id...>]
+invoiceleaf exports download <id> [-o <path>]
+```
+
+Exports are generated in the background. `exports create` returns right away
+with state `processing`. Check `exports list` until the state is `success`,
+then run `exports download`.
+
+### Statistics
+
+```bash
+invoiceleaf statistics show [--from <date>] [--to <date>] [--base-currency <code>]
+```
+
+Prints document totals per currency. With `--base-currency` all amounts are
+converted to that currency. `--json` returns the full statistics response.
+
+### Tax agent
+
+```bash
+invoiceleaf tax obligations list
+invoiceleaf tax runs list [--state <state>] [--obligation <id>] [--limit <n>] [--offset <n>]
+invoiceleaf tax runs show <id>
+```
+
+Run states: SCHEDULED, COLLECTING, BLOCKED, VALIDATED, PREPARED,
+AWAITING_APPROVAL, FILING, FILED, REJECTED, ERROR, DEAD_LETTER, CANCELLED.
+The CLI only reads obligations and runs. Approving or cancelling a run is not
+available from the CLI.
+
+### Integrations
+
+`invoiceleaf integrations list|get|sync|refresh|delete|submit-review`. See the
+next section.
 
 ## Integrations
 

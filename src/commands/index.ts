@@ -8,6 +8,12 @@ import { registerOrganizationsCommands } from './organizations';
 import { registerCategoriesCommands } from './categories';
 import { registerTagsCommands } from './tags';
 import { registerIntegrationsCommands } from './integrations';
+import { registerCompaniesCommands } from './companies';
+import { registerPaymentsCommands } from './payments';
+import { registerBankCommands } from './bank';
+import { registerExportsCommands } from './exports';
+import { registerStatisticsCommands } from './statistics';
+import { registerTaxCommands } from './tax';
 
 export function registerCommands(program: Command): void {
   registerAuthCommands(program);
@@ -19,4 +25,10 @@ export function registerCommands(program: Command): void {
   registerCategoriesCommands(program);
   registerTagsCommands(program);
   registerIntegrationsCommands(program);
+  registerCompaniesCommands(program);
+  registerPaymentsCommands(program);
+  registerBankCommands(program);
+  registerExportsCommands(program);
+  registerStatisticsCommands(program);
+  registerTaxCommands(program);
 }

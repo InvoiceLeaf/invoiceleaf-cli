@@ -1,4 +1,5 @@
 import { Command } from 'commander';
+import { version } from '../package.json';
 import { registerCommands } from './commands';
 import { handleError } from './utils';
 
@@ -8,7 +9,7 @@ export function createProgram(): Command {
   program
     .name('invoiceleaf')
     .description('InvoiceLeaf CLI')
-    .version('0.2.0', '-v, --version', 'Display version number')
+    .version(version, '-v, --version', 'Display version number')
     .option('--json', 'Output JSON')
     .option('--no-color', 'Disable colors')
     .option('--api-key <key>', 'API key for authentication')
@@ -25,6 +26,8 @@ Examples:
   $ invoiceleaf auth token --set eyJhbGci...
   $ invoiceleaf spaces list
   $ invoiceleaf documents list --space <spaceId>
+  $ invoiceleaf documents upload invoice.pdf --space <spaceId>
+  $ invoiceleaf bank transactions list --status POSTED
   $ invoiceleaf profile show
 `
     );
